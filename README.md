@@ -31,3 +31,4 @@ orbital-command/
 - Earth imagery credit: NASA, as distributed with the three.js examples. Check the terms before store release.
 - Progress and the Solar Sandbox fleet are saved in the browser (localStorage).
 - **Offline / install:** after one online visit the pages, Three.js, fonts and Earth textures are cached, so the game runs offline and can be added to the home screen. Bump `CACHE` in `sw.js` (for example `oc-v2`) on each release so players get updates.
+- **Daily Challenge:** `defence.html?daily=1` generates a seeded puzzle from the UTC date (same for everyone, no server). It unlocks in the menu after the three training levels. Progress, attempts and streak are stored in `localStorage` (`od2d`).
