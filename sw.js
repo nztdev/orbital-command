@@ -1,5 +1,5 @@
 // Orbital Command service worker: offline play. Bump CACHE on each release so updates arrive.
-const CACHE='oc-v1',CORE=['./','./index.html','./defence.html','./solar-sandbox.html','./js/sim.js','./js/globe.js','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png'];
+const CACHE='oc-v2',CORE=['./','./index.html','./defence.html','./solar-sandbox.html','./js/sim.js','./js/globe.js','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>Promise.all(CORE.map(u=>c.add(u).catch(()=>{})))).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==CACHE).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
 const put=(r,res)=>{if(res&&(res.ok||res.type==='opaque')){const cp=res.clone();caches.open(CACHE).then(c=>c.put(r,cp))}return res};
