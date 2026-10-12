@@ -61,20 +61,24 @@ canvas#tl{width:100%;height:46px;display:block;background:#050a18;border-radius:
 <div class="bar sl"><span class="h">START ANGLE <b id="agv">0°</b></span><input type="range" id="ag" min="0" max="359" value="0" style="flex:1"></div>
 <div class="bar tlr"><canvas id="tl"></canvas><input type="range" id="sc" min="0" max="1000" value="0" style="width:100%"></div>
 <div class="bar"><button id="dp">Deploy</button><button id="un">Undo</button><span class="sp"></span><button id="pl">▶ Test</button><button id="cm">Commit</button></div></div></div>
-<div class="hp off" id="pD"><div class="hd"><b>DEBRIEF</b></div><div class="bd" style="text-align:center"><h2 id="dt"></h2><div id="ds2" style="font-size:20px;color:#ffd24a"></div><p id="dx"></p><div class="row" style="justify-content:center"><button id="dr">↻ Retry</button><button id="dn">Next level ▸</button><a class="btn" href="./index.html">Menu</a></div></div></div>
+<div class="hp off" id="pD"><div class="hd"><b>DEBRIEF</b></div><div class="bd" style="text-align:center"><h2 id="dt"></h2><div id="ds2" style="font-size:20px;color:#ffd24a"></div><p id="dx"></p><div class="row" style="justify-content:center"><button id="dr">↻ Retry</button><button id="dn">Next level ▸</button><button id="dsh" hidden>Share result</button><a class="btn" href="./index.html">Menu</a></div></div></div>
 </div>
 <div id="fx"></div>
 <div id="al"><div class="bar2 t"></div><div class="bar2 b"></div><div id="ft"></div><div class="at"><div class="a1">⚠ ALERT</div><div class="a2">UNIDENTIFIED CONTACT DETECTED</div></div></div>
-<div id="gate"><div><div class="gk">PLANETARY DEFENCE</div><h2 id="gl">LEVEL 1</h2><button id="go">▶ TAP TO ENGAGE</button><div class="h" style="margin-top:14px;font:12px system-ui,sans-serif">Sound on. Jarvis will brief you aloud.</div></div></div>
+<div id="gate"><div><div class="gk" id="gk">PLANETARY DEFENCE</div><h2 id="gl">LEVEL 1</h2><div class="h" id="gx" style="margin:-12px 0 18px;font:12px system-ui,sans-serif"></div><button id="go">▶ TAP TO ENGAGE</button><div class="h" style="margin-top:14px;font:12px system-ui,sans-serif">Sound on. Jarvis will brief you aloud.</div></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="./js/sim.js"></script>
 <script src="./js/globe.js"></script>
 <script>
-const $=s=>document.querySelector(s),V=(x,y,z)=>new T3.Vector3(x,y,z),LIM=4,narrow=()=>innerWidth<820;
+const $=s=>document.querySelector(s),V=(x,y,z)=>new T3.Vector3(x,y,z),narrow=()=>innerWidth<820;let LIM=4;
 let P={stars:[0,0,0],clk:false,tier:0,voice:true};try{Object.assign(P,JSON.parse(localStorage.getItem('od2')||'{}'))}catch(e){}
 const save=()=>{try{localStorage.setItem('od2',JSON.stringify(P))}catch(e){}};
 let LI=0,plan=[],res,pt=0,playing=false,commitRun=false,stage='gate',sel={ty:0,op:1},ang=0,clk=90,armed=false,cs=null,dirty=true,yw=.6,drag=null,subT,talk=false,talkUntil=0,AC;
-const lv=()=>LV[LI];
+function loadDaily(){const k=dayKey();try{const c=JSON.parse(localStorage.getItem('od2g')||'null');if(c&&c.key==k&&c.m)return c.m}catch(e){}const m=makeDaily(k);try{localStorage.setItem('od2g',JSON.stringify({key:k,m}))}catch(e){}return m}
+const daily=new URLSearchParams(location.search).has('daily'),LEV=daily?[loadDaily()||LV[0]]:LV,lv=()=>LEV[LI];
+let D={key:0,attempts:0,best:null,streak:0,lastWin:0};try{Object.assign(D,JSON.parse(localStorage.getItem('od2d')||'{}'))}catch(e){}
+if(daily&&D.key!=lv().key){D.key=lv().key;D.attempts=0;D.best=null}
+const saveD=()=>{try{localStorage.setItem('od2d',JSON.stringify(D))}catch(e){}};
 // ---------- main 3D scene ----------
 const cv=$('#c3'),r3=new T3.WebGLRenderer({canvas:cv,antialias:true}),s3=new T3.Scene(),cam=new T3.PerspectiveCamera(45,1,.1,500),fcam=new T3.PerspectiveCamera(40,1.6,.05,500),fcp=V(0,12,14),flk=V();
 r3.setPixelRatio(Math.min(devicePixelRatio,2));r3.outputEncoding=T3.sRGBEncoding;
@@ -96,14 +100,14 @@ const clr=g=>{while(g.children.length)g.remove(g.children[0])};
 const UY=V(0,1,0),GT=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d'),g=x.createRadialGradient(32,32,0,32,32,32);g.addColorStop(0,'#fff');g.addColorStop(.3,'rgba(255,255,255,.5)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,64,64);return new T3.CanvasTexture(c)})(),
 RT=(()=>{const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');x.strokeStyle='#fff';x.lineWidth=6;x.shadowColor='#fff';x.shadowBlur=10;x.beginPath();x.arc(64,64,52,0,7);x.stroke();return new T3.CanvasTexture(c)})();
 const spr=(tex,col,sz,op)=>{const m=new T3.Sprite(new T3.SpriteMaterial({map:tex,color:col,blending:T3.AdditiveBlending,depthWrite:false,transparent:true,opacity:op}));m.scale.setScalar(sz);return m};
-const NP=360,pp=new Float32Array(NP*3),pc=new Float32Array(NP*3),pvv=new Float32Array(NP*3),pl=new Float32Array(NP),pm=new Float32Array(NP),pcol=new Float32Array(NP*3),pgeo=new T3.BufferGeometry();let pi_=0,shake=0,zm=1,zoomT=1,prevInr=[];
+const NP=600,pp=new Float32Array(NP*3),pc=new Float32Array(NP*3),pvv=new Float32Array(NP*3),pl=new Float32Array(NP),pm=new Float32Array(NP),pcol=new Float32Array(NP*3),pgeo=new T3.BufferGeometry();let pi_=0,shake=0,zm=1,zoomT=1,prevInr=[];
 pgeo.setAttribute('position',new T3.BufferAttribute(pp,3));pgeo.setAttribute('color',new T3.BufferAttribute(pc,3));
 const pts=new T3.Points(pgeo,new T3.PointsMaterial({size:.16,map:GT,vertexColors:true,transparent:true,depthWrite:false,blending:T3.AdditiveBlending}));pts.frustumCulled=false;s3.add(pts);
 function emit(x,y,z,vx,vy,vz,life,r,g,b){const i=pi_++%NP;pp.set([x,y,z],i*3);pvv.set([vx,vy,vz],i*3);pl[i]=pm[i]=life;pcol.set([r,g,b],i*3)}
 function psUpdate(dt){for(let i=0;i<NP;i++){if(pl[i]>0){pl[i]-=dt;const k=Math.max(0,pl[i]/pm[i]);for(let a=0;a<3;a++){pp[i*3+a]+=pvv[i*3+a]*dt;pc[i*3+a]=pcol[i*3+a]*k}}else pc[i*3]=pc[i*3+1]=pc[i*3+2]=0}pgeo.attributes.position.needsUpdate=true;pgeo.attributes.color.needsUpdate=true}
 const bursts=[];function burst(tex,col,x,y,z,s0,s1,dur,op=1){const m=spr(tex,col,s0,op);m.position.set(x,y,z);s3.add(m);bursts.push({m,t:0,dur,s0,s1,op})}
 function burstUpdate(dt){for(let i=bursts.length-1;i>=0;i--){const b=bursts[i];b.t+=dt;const k=b.t/b.dur;if(k>=1){s3.remove(b.m);bursts.splice(i,1);continue}b.m.scale.setScalar(b.s0+(b.s1-b.s0)*(1-(1-k)*(1-k)));b.m.material.opacity=b.op*(1-k)}}
-function boomAt(tp,big){const X=tp[0],Z=-tp[1];burst(GT,0xffe0a0,X,0,Z,.4,big?5:3.6,.7);burst(RT,0x9fe0ff,X,0,Z,.3,big?6:4.5,1);for(let i=0;i<70;i++){const a=Math.random()*6.283,b=(Math.random()-.5)*2,sp=.8+Math.random()*2.6;emit(X,0,Z,Math.cos(a)*sp,b*sp*.6,Math.sin(a)*sp,.9+Math.random()*.8,1,.6+Math.random()*.4,.2)}}
+function boomAt(tp,big){const X=tp[0],Z=-tp[1],cr=[[1,.7,.25],[.75,.9,.75],[1,.9,.35]][lv().k];burst(GT,0xffe0a0,X,0,Z,.4,big?5:3.6,.7);burst(RT,0x9fe0ff,X,0,Z,.3,big?6:4.5,1);for(let i=0;i<70;i++){const a=Math.random()*6.283,b=(Math.random()-.5)*2,sp=.8+Math.random()*2.6;emit(X,0,Z,Math.cos(a)*sp,b*sp*.6,Math.sin(a)*sp,.9+Math.random()*.8,cr[0],cr[1]*(.75+Math.random()*.4),cr[2])}}
 function impactAt(tp){const L=Math.hypot(...tp)||1,ux=tp[0]/L,uz=-tp[1]/L,X=ux*1.04,Z=uz*1.04;burst(GT,0xff7a3a,X,0,Z,.5,4.2,.8);burst(RT,0xff4a2a,X,0,Z,.4,7,1.3);burst(RT,0xffd0a0,X,0,Z,.2,4,.7);for(let i=0;i<110;i++){const a=Math.random()*6.283,sp=.6+Math.random()*2.8;emit(X,0,Z,ux*sp*1.4+Math.cos(a)*sp*.7,(Math.random()-.3)*sp,uz*sp*1.4+Math.sin(a)*sp*.7,.9+Math.random()*1,1,.35+Math.random()*.4,.1)}}
 function flashFx(){const f=$('#fx');f.classList.remove('on');void f.offsetWidth;f.classList.add('on')}
 function tone(f0,f1,dur,type='sine',vol=.05,delay=0){if(!P.voice||!AC)return;try{const t=AC.currentTime+delay,o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+dur);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+dur+.02)}catch(e){}}
@@ -112,12 +116,18 @@ const sfxZap=()=>tone(1400,260,.16,'sawtooth',.025),sfxBoom=()=>{noise(1,1800,60
 sfxWin=()=>[523,659,784,1047].forEach((f,i)=>tone(f,f,.4,'triangle',.06,i*.14+.1)),sfxLose=()=>[330,262,196].forEach((f,i)=>tone(f,f*.97,.55,'sawtooth',.04,i*.28+.2));
 const orbD=(it,col,op)=>{const l=new T3.Line(new T3.BufferGeometry().setFromPoints(orbitPts(it).map(p=>V(p[0],0,-p[1]))),new T3.LineDashedMaterial({color:col,dashSize:.12,gapSize:.1,transparent:true,opacity:op}));l.computeLineDistances();return l};
 const numTex=(n,c)=>{const k=document.createElement('canvas');k.width=k.height=64;const x=k.getContext('2d');x.fillStyle='rgba(0,0,0,.6)';x.beginPath();x.arc(32,32,27,0,7);x.fill();x.strokeStyle=c;x.lineWidth=3;x.stroke();x.font='bold 34px Orbitron,system-ui,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillStyle=c;x.fillText(n,32,35);return new T3.CanvasTexture(k)};
+const sfxFor=t=>t==0?sfxZap():t==1?(noise(.35,900,180,.12),tone(220,120,.25,'square',.03)):(tone(200,520,.45,'sine',.07),tone(205,530,.45,'sine',.05));
+function fire(s,ty,ax,az,bx,bz,dx,dz,L,dt){const ux=dx/L,uz=dz/L,c=s.col,pl=playing;s.tm=(s.tm||0)+dt;
+s.bm.position.set((ax+bx)/2,0,(az+bz)/2);s.bm.quaternion.setFromUnitVectors(UY,V(ux,0,uz));s.mz.position.set(ax,0,az);s.mz.scale.setScalar(.28+.18*Math.random());s.bm.visible=ty!=2;s.bb.visible=ty==2;s.bb.position.set(ax,0,az);s.bb.scale.setScalar(1+.12*Math.sin(performance.now()*.012));
+if(ty==0){s.bm.material.opacity=.25;s.bm.scale.set(.5,L,.5);if(pl){for(let k=0;k<2;k++)emit(ax+ux*.2,0,az+uz*.2,ux*16,0,uz*16,Math.min(L/16,1.2),.9,1,1);emit(bx,0,bz,(Math.random()-.5)*3,(Math.random()-.5)*2,(Math.random()-.5)*3,.4,1,.7,.3)}}
+else if(ty==1){s.bm.material.opacity=.16;s.bm.scale.set(7,L,7);if(pl){if(s.tm>.45){s.tm=0;burst(RT,c,bx,0,bz,.4,2.4,.55,.8)}for(let k=0;k<3;k++)emit(bx+(Math.random()-.5)*.8,0,bz+(Math.random()-.5)*.8,(Math.random()-.5)*3.5,(Math.random()-.5)*2,(Math.random()-.5)*3.5,.7,.55,.75,.5)}}
+else if(pl){for(let k=0;k<4;k++){const f=Math.random(),jx=-uz*(Math.random()-.5)*.5,jz=ux*(Math.random()-.5)*.5;emit(ax+dx*f+jx,0,az+dz*f+jz,jx*3,(Math.random()-.5)*.8,jz*3,.28,1,.78,.25)}if(s.tm>.6){s.tm=0;burst(RT,0xffd060,bx,0,bz,.5,3,.7,.7)}}}
 function rebuild(){dirty=false;clr(g3);sh3=[];plan.forEach((it,i)=>{const c=DT[it.ty].c,d=dot(c,.085),rg=new T3.Mesh(new T3.SphereGeometry(DT[it.ty].rg,24,16),new T3.MeshBasicMaterial({color:c,transparent:true,opacity:.12,depthWrite:false})),
-bm=new T3.Mesh(new T3.CylinderGeometry(.022,.022,1,6),new T3.MeshBasicMaterial({color:c,transparent:true,opacity:.9,blending:T3.AdditiveBlending,depthWrite:false})),mz=spr(GT,c,.3,.9),hl=spr(GT,c,.5,.55),lb=new T3.Sprite(new T3.SpriteMaterial({map:numTex(i+1,c),transparent:true}));lb.scale.setScalar(.4);bm.frustumCulled=false;bm.visible=mz.visible=false;g3.add(orb3(it,c,.85),d,rg,bm,mz,hl,lb);sh3.push({d,rg,bm,mz,hl,lb,col:new T3.Color(c)})})}
+bm=new T3.Mesh(new T3.CylinderGeometry(.022,.022,1,6),new T3.MeshBasicMaterial({color:c,transparent:true,opacity:.9,blending:T3.AdditiveBlending,depthWrite:false})),mz=spr(GT,c,.3,.9),hl=spr(GT,c,.5,.55),lb=new T3.Sprite(new T3.SpriteMaterial({map:numTex(i+1,c),transparent:true}));lb.scale.setScalar(.4);bm.frustumCulled=false;const bb=new T3.Mesh(new T3.SphereGeometry(.45,14,10),new T3.MeshBasicMaterial({color:c,wireframe:true,transparent:true,opacity:.55,blending:T3.AdditiveBlending,depthWrite:false}));bb.visible=bm.visible=mz.visible=false;g3.add(orb3(it,c,.85),d,rg,bm,mz,hl,lb,bb);sh3.push({d,rg,bm,mz,hl,lb,bb,col:new T3.Color(c)})})}
 let hpos=null;
 function preview(){clr(pv);hpos=null;pv.userData.hh=null;if(stage!='plan'||plan.length>=LIM)return;const it={ty:sel.ty,op:sel.op,ang:ang*A},m=spr(RT,0xffffff,.5,.95),hh=spr(GT,0xffffff,.9,.45),p=posAt(it,0),
 spoke=new T3.Line(new T3.BufferGeometry().setFromPoints([V(),V(p[0],0,-p[1])]),new T3.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.25}));m.position.set(p[0],0,-p[1]);hh.position.copy(m.position);hpos=m.position.clone();pv.userData.hh=hh;pv.add(orbD(it,0xffffff,.9),spoke,hh,m)}
-function buildGhost(){clr(gh);if(P.tier==0)lv().rec.forEach(([op,a])=>{const it={ty:lv().k,op,ang:a*A},c=DT[lv().k].c,m=spr(RT,c,.3,.8),p=posAt(it,0);m.position.set(p[0],0,-p[1]);gh.add(orbD(it,c,.75),m)})}
+function buildGhost(){clr(gh);if(P.tier==0&&!daily)lv().rec.forEach(([op,a])=>{const it={ty:lv().k,op,ang:a*A},c=DT[lv().k].c,m=spr(RT,c,.3,.8),p=posAt(it,0);m.position.set(p[0],0,-p[1]);gh.add(orbD(it,c,.75),m)})}
 // ---------- holographic previews (rendered into the deploy cards) ----------
 const hsc=new T3.Scene(),hcam=new T3.PerspectiveCamera(32,1.2,.1,50),HOLO=[],HORB=[];hcam.position.set(0,2.1,3.3);hcam.lookAt(0,.05,0);
 const hm=c=>new T3.LineBasicMaterial({color:c,transparent:true,opacity:.9,blending:T3.AdditiveBlending,depthWrite:false});
@@ -159,8 +169,8 @@ if(s=='run'){show('pR',true);show('pJ',true);show('pB',false);$('#pB').classList
 if(s=='debrief'){show('pB',true);show('pD',false)}preview()}
 // ---------- analysis briefing ----------
 function startAnalysis(){const m=lv();setStage('analysis');
-cs={el:0,i:0,ph:0,silent:false,L:['Good day, Commander. I have a live feed of the incoming threat: the '+m.n+'.','It approaches from bearing '+m.bear.replace('°',' degrees')+', with impact expected in '+m.eta+' seconds.',m.cls,m.h[P.tier].replace('{E}',m.eta)]};
-if(P.tier==0)cs.L.push('I have taken the liberty of marking a recommended layout on your display. Good luck, Commander.');fcp.set(0,12,14);flk.set(0,0,0);$('#jrp').hidden=true;csNext()}
+cs={el:0,i:0,ph:0,silent:false,L:['Good day, Commander. I have a live feed of the incoming threat: the '+m.n+'.','It approaches from bearing '+m.bear.replace('°',' degrees')+', with impact expected in '+m.eta+' seconds.',m.cls,m.h[daily?2:P.tier].replace('{E}',m.eta)]};
+if(!daily&&P.tier==0)cs.L.push('I have taken the liberty of marking a recommended layout on your display. Good luck, Commander.');fcp.set(0,12,14);flk.set(0,0,0);$('#jrp').hidden=true;csNext()}
 function csNext(){if(!cs)return;if(cs.i>=cs.L.length)return csEnd();const s=cs.L[cs.i++],me=cs,tts=P.voice&&!me.silent&&window.speechSynthesis;me.ph=me.i;$('#cap').textContent=s;let done=false;
 const go=()=>{if(done||cs!==me)return;done=true;clearTimeout(me.to);talk=false;me.to=setTimeout(csNext,450)};me.go=go;me.cur=s;me.to=setTimeout(go,tts?s.length*140+3000:Math.max(3000,s.length*70));
 if(tts){speechSynthesis.cancel();const u=ut(s);u.onend=u.onerror=go;speechSynthesis.speak(u)}else talkUntil=performance.now()+s.length*65}
@@ -169,28 +179,34 @@ function csEnd(){if(cs)clearTimeout(cs.to);cs=null;talk=false;window.speechSynth
 function recalc(){res=sim(lv(),plan);pt=Math.min(pt,res.end);dirty=true;$('#lc').textContent=plan.length+'/'+LIM+' launched';$('#dp').disabled=plan.length>=LIM;$('#pl').disabled=$('#cm').disabled=!plan.length;$('#pB').classList.toggle('has',plan.length>0)}
 function mark(){document.querySelectorAll('.hcard').forEach(c=>c.classList.toggle('on',sel[c.dataset.k]==c.dataset.i))}
 function chips(){const mk=(h,k,i,n,sm)=>{const d=document.createElement('div');d.className='hcard';d.dataset.k=k;d.dataset.i=i;d.innerHTML='<span>'+n+'<small>'+sm+'</small></span>';d.onclick=()=>{sel[k]=i;mark();preview()};$(h).append(d)};
-$('#ds').innerHTML='';$('#os').innerHTML='';lv().types.forEach(t=>mk('#ds','ty',t,DT[t].n,['vs asteroids','vs debris','vs storms'][t]));OP.forEach((o,i)=>mk('#os','op',i,o[0],o[4]));mark()}
-function lvChips(){$('#lvs').innerHTML='';LV.forEach((m,i)=>{const b=document.createElement('button'),open=i==0||P.stars[i-1]>0;b.textContent='L'+(i+1)+(P.stars[i]?' '+'★'.repeat(P.stars[i]):'')+(open?'':' 🔒');b.disabled=!open;b.className=i==LI?'on':'';b.onclick=()=>enterLevel(i);$('#lvs').append(b)})}
-function prep(i){LI=i;plan=[];ang=0;$('#ag').value=0;$('#agv').textContent='0°';sel={ty:lv().types[0],op:1};pt=0;playing=false;cs=null;talk=false;shake=0;zoomT=1;prevInr=[];window.speechSynthesis&&speechSynthesis.cancel();recalc();chips();buildGhost();lvChips()}
+$('#ds').innerHTML='';$('#os').innerHTML='';lv().types.forEach(t=>mk('#ds','ty',t,DT[t].n,['vs asteroids','vs debris','vs storms'][t]));OP.forEach((o,i)=>{if(!lv().ops||lv().ops.includes(i))mk('#os','op',i,o[0],o[4])});mark()}
+function lvChips(){$('#lvs').innerHTML='';if(daily){const b=document.createElement('button');b.className='on';b.disabled=true;b.textContent='DAILY '+dayLabel(lv().key).slice(5)+(D.best?' '+'★'.repeat(D.best.stars):'');$('#lvs').append(b);return}
+LEV.forEach((m,i)=>{const b=document.createElement('button'),open=i==0||P.stars[i-1]>0;b.textContent='L'+(i+1)+(P.stars[i]?' '+'★'.repeat(P.stars[i]):'')+(open?'':' 🔒');b.disabled=!open;b.className=i==LI?'on':'';b.onclick=()=>enterLevel(i);$('#lvs').append(b)})}
+function prep(i){LI=i;plan=[];ang=0;$('#ag').value=0;$('#agv').textContent='0°';sel={ty:lv().types[0],op:lv().ops?lv().ops[0]:1};LIM=lv().lim||4;pt=0;playing=false;cs=null;talk=false;shake=0;zoomT=1;prevInr=[];window.speechSynthesis&&speechSynthesis.cancel();recalc();chips();buildGhost();lvChips()}
 function enterLevel(i){prep(i);setStage('alert');const id=i,al=$('#al');al.classList.remove('on');void al.offsetWidth;al.classList.add('on');siren();
 setTimeout(()=>{al.classList.remove('on');if(stage=='alert'&&LI==id)startAnalysis()},3800)}
 function report(commit){const m=lv(),l=res.st[res.st.length-1],cov=res.st.reduce((s,q)=>s+q.inr.filter(Boolean).length*.1,0),need=m.hp/Math.max(...DT.map(d=>d.d[m.k]));
 let s=(res.win?(commit?'Splendid work, Commander. ':'Dry run complete. ')+'The threat was neutralised at '+l.t.toFixed(0)+' seconds.':(commit?'Regrettably, Commander, ':'Dry run complete. ')+'we would suffer impact at '+res.hit.toFixed(0)+' seconds, with '+Math.round(l.hp/m.hp*100)+' percent of the threat intact.')+' Coverage totalled '+cov.toFixed(1)+' seconds, against roughly '+need.toFixed(0)+' required.';
 if(!res.win)s+=cov==0?' Nothing engaged at all, which suggests the defender type may not suit this threat.':' Might I suggest adding coverage where it closes on Earth, or adjusting your start angles?';return s}
 function run(commit){if(!plan.length){say('Forgive me, Commander, but no defenders have been deployed.');return}pt=0;playing=true;commitRun=commit;if(commit)setStage('run')}
-function finish(){const txt=report(commitRun),last=res.st[res.st.length-1],id=LI;say(txt);
+function finish(){const txt=report(commitRun),last=res.st[res.st.length-1],id=LI,m=lv();say(txt);
 if(res.win){boomAt(last.tp,commitRun);sfxBoom();if(commitRun){burst(GT,0x66ccff,0,0,0,3,4.2,1.4,.55);zoomT=.8}}
 else{impactAt(last.tp);sfxImpact();if(commitRun){shake=1.2;zoomT=.72;flashFx()}}
-if(!commitRun)return;let st=0;if(res.win){st=plan.length<=3?3:2;P.stars[LI]=Math.max(P.stars[LI],st);save();lvChips()}
+if(!commitRun)return;let st=0;
+if(daily){D.attempts++;if(res.win){st=plan.length<=m.par?3:2;const b=D.best;if(!b||st>b.stars||(st==b.stars&&plan.length<b.used))D.best={stars:st,used:plan.length,plan:plan.map(p=>p.ty)};if(D.lastWin!=m.key){D.streak=D.lastWin==prevDay(m.key)?D.streak+1:1;D.lastWin=m.key}}saveD();lvChips()}
+else if(res.win){st=plan.length<=3?3:2;P.stars[LI]=Math.max(P.stars[LI],st);save();lvChips()}
 setTimeout(()=>{if(stage!='run'||LI!=id)return;setStage('debrief');(res.win?sfxWin:sfxLose)();const pd=$('#pD');pd.classList.toggle('win',res.win);pd.classList.toggle('lose',!res.win);
 $('#dt').textContent=res.win?'EARTH SAFE':'IMPACT';$('#ds2').innerHTML=res.win?[1,2,3].map(i=>'<span class="'+(i<=st?'pop':'dim')+'" style="animation-delay:'+(.3+i*.35).toFixed(2)+'s">'+(i<=st?'★':'☆')+'</span>').join(''):'';
-$('#dx').textContent=res.win?(LI<2?'The next level has been unlocked.':'Training complete. Conquest Campaign awaits.'):'The threat reached Earth. Adjust your defences and try again.';$('#dn').hidden=!(res.win&&LI<2)},1800)}
+$('#dx').textContent=daily?(res.win?'Par '+m.par+', you used '+plan.length+'. Attempts today: '+D.attempts+'. Streak: '+D.streak+' day'+(D.streak==1?'':'s')+'.':'The threat reached Earth. Retry as often as you like; your best result counts.'):(res.win?(LI<2?'The next level has been unlocked.':'Training complete. Conquest Campaign awaits.'):'The threat reached Earth. Adjust your defences and try again.');
+$('#dn').hidden=daily||!(res.win&&LI<2);$('#dsh').hidden=!(daily&&res.win);$('#dsh').textContent='Share result'},1800)}
+function shareDaily(){const m=lv(),b=D.best,sq=['🟦','🟩','🟨'],t='Orbital Command Daily '+dayLabel(m.key)+'\n'+['☄️','💫','☀️'][m.k]+' '+m.n+' · par '+m.par+'\n'+(b?b.plan.map(x=>sq[x]).join('')+' '+'⭐'.repeat(b.stars):'')+'\nAttempts: '+D.attempts+(D.streak>1?' · Streak '+D.streak:'')+'\n'+location.href.replace(/defence\.html.*$/,'index.html');
+if(navigator.share)navigator.share({text:t}).catch(()=>{});else if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>{$('#dsh').textContent='Copied ✓'},()=>prompt('Copy your result:',t));else prompt('Copy your result:',t)}
 // ---------- wiring ----------
 $('#ag').oninput=e=>{ang=+e.target.value;$('#agv').textContent=ang+'°';preview()};
 $('#dp').onclick=()=>{plan.push({ty:sel.ty,op:sel.op,ang:ang*A});recalc();preview()};
 $('#un').onclick=()=>{plan.pop();playing=false;recalc();preview()};
 $('#pl').onclick=()=>run(false);$('#cm').onclick=()=>run(true);$('#sc').oninput=e=>{playing=false;pt=e.target.value/1000*res.end};
-$('#gear').onclick=()=>$('#set').classList.toggle('on');$('#dr').onclick=()=>enterLevel(LI);$('#dn').onclick=()=>enterLevel(LI+1);
+$('#gear').onclick=()=>$('#set').classList.toggle('on');$('#dr').onclick=()=>enterLevel(LI);$('#dsh').onclick=shareDaily;$('#dn').onclick=()=>enterLevel(LI+1);
 $('#jsk').onclick=()=>{if(cs)csEnd()};$('#jsv').onclick=stopVoice;$('#jrp').onclick=()=>{if(stage=='plan')startAnalysis()};
 $('#jmu').onclick=()=>{P.voice=!P.voice;$('#jmu').textContent=P.voice?'🔊':'🔇';save();if(!P.voice){talk=false;window.speechSynthesis&&speechSynthesis.cancel()}};
 $('#tier').onchange=e=>{P.tier=e.target.selectedIndex;save();buildGhost()};$('#ck').onchange=e=>{P.clk=e.target.checked;save();clk=90};
@@ -225,16 +241,16 @@ let q,fin=false;if(cs){cs.el+=dt;const ts=Math.min(m.eta*.8,cs.el*1.5);q={tp:[m.
 const gone=!cs&&q===res.st[res.st.length-1];thr(m,q.tp,t,!gone&&stage!='gate');if(dirty)rebuild();
 $('#tel').textContent='RNG '+Math.hypot(...q.tp).toFixed(1)+' · SPD '+Math.hypot(...m.v).toFixed(2)+' · T-'+Math.max(0,m.eta-q.t).toFixed(0)+'s';
 sh3.forEach((s,i)=>{const p=q.sh[i];if(!p)return;const on=q.inr[i]&&!gone;s.d.position.set(p[0],0,-p[1]);s.rg.position.copy(s.d.position);s.hl.position.copy(s.d.position);s.hl.scale.setScalar(.45+.08*Math.sin(t*4+i));s.lb.position.set(p[0],.3,-p[1]);s.rg.visible=s.bm.visible=s.mz.visible=on;
-if(on){const ax=p[0],az=-p[1],bx=q.tp[0],bz=-q.tp[1],dx=bx-ax,dz=bz-az,L=Math.hypot(dx,dz)||.01;s.bm.position.set((ax+bx)/2,0,(az+bz)/2);s.bm.scale.set(.6+Math.random()*.9,L,.6+Math.random()*.9);s.bm.quaternion.setFromUnitVectors(UY,V(dx/L,0,dz/L));s.mz.position.set(ax,0,az);s.mz.scale.setScalar(.28+.18*Math.random());
-if(playing)emit(bx,0,bz,(Math.random()-.5)*2.2,(Math.random()-.5)*1.5,(Math.random()-.5)*2.2,.45,s.col.r,s.col.g,s.col.b)}});
-if(playing){q.inr.forEach((b,i)=>{if(b&&!prevInr[i])sfxZap()});prevInr=q.inr.slice()}
+if(on){const ax=p[0],az=-p[1],bx=q.tp[0],bz=-q.tp[1],dx=bx-ax,dz=bz-az,L=Math.hypot(dx,dz)||.01;fire(s,plan[i].ty,ax,az,bx,bz,dx,dz,L,dt)}else s.bb.visible=false});
+if(playing){q.inr.forEach((b,i)=>{if(b&&!prevInr[i])sfxFor(plan[i].ty)});prevInr=q.inr.slice()}
 if(pv.userData.hh)pv.userData.hh.scale.setScalar(.8+.2*Math.sin(t*5));const guides=!playing&&pt<.05;gh.visible=P.tier==0&&((stage=='plan'&&guides)||fin);pv.visible=stage=='plan'&&guides;
 if(!drag&&!hd&&!playing&&stage!='plan')yw+=dt*.03;const R=(narrow()?17:13)*zm,el=.62;cam.position.set(Math.sin(yw)*R*Math.cos(el),R*Math.sin(el),Math.cos(yw)*R*Math.cos(el));if(shake>0)cam.position.add(V((Math.random()-.5)*shake*.5,(Math.random()-.5)*shake*.5,(Math.random()-.5)*shake*.5));cam.lookAt(0,0,0);
 const j=$('#pJ'),pb=$('#pB'),jh=!j.classList.contains('off')&&!j.classList.contains('min')&&narrow()?j.getBoundingClientRect().bottom-44:0,bh=pb.classList.contains('off')?0:pb.getBoundingClientRect().height,tgt=(bh-jh)/(narrow()?2:2.6),oy=cam.userData.oy||0;
 cam.userData.oy=oy+(tgt-oy)*(1-Math.exp(-dt*6));cam.setViewOffset(innerWidth,innerHeight,0,cam.userData.oy,innerWidth,innerHeight);
 r3.render(s3,cam);feed(q.tp,fin,dt);holo(t);radar(q,t);if(pb.classList.contains('has')&&!pb.classList.contains('off'))tline();wave(ms)}
 // ---------- boot: tap-to-engage gate (a tap is required for voice and sound) ----------
-const first=P.stars.findIndex(s=>!s);prep(first<0?0:first);setStage('gate');$('#gl').textContent='LEVEL '+(LI+1)+' · '+lv().n.toUpperCase();
+const first=daily?0:P.stars.findIndex(s=>!s);prep(first<0?0:first);setStage('gate');
+if(daily){document.title='Daily Challenge · Orbital Command';$('#gk').textContent='DAILY CHALLENGE · '+dayLabel(lv().key);$('#gl').textContent=lv().n.toUpperCase();$('#gx').textContent='Par '+lv().par+' · '+lv().mods+' · streak '+D.streak+' · attempts today '+D.attempts}else $('#gl').textContent='LEVEL '+(LI+1)+' · '+lv().n.toUpperCase();
 $('#go').onclick=()=>{unlock();$('#gate').classList.add('off');enterLevel(LI)};
 requestAnimationFrame(frame);
 </script><script>if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));</script></body></html>
