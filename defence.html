@@ -41,13 +41,14 @@ canvas#tl{width:100%;height:46px;display:block;background:#050a18;border-radius:
 #al{position:fixed;inset:0;z-index:15;pointer-events:none;opacity:0;transition:opacity .35s;font-family:Orbitron,system-ui,sans-serif}#al.on{opacity:1}
 #al::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(255,0,0,0) 35%,rgba(255,20,20,.6) 100%);animation:rl .56s steps(1) infinite}
 #al .bar2{position:absolute;left:0;right:0;height:14px;background:repeating-linear-gradient(90deg,#ff2a2a 0 36px,#2a0000 36px 72px);background-size:72px 100%;animation:sl .7s linear infinite;box-shadow:0 0 24px #f22}#al .bar2.t{top:0}#al .bar2.b{bottom:0;animation-direction:reverse}
-#ft{position:absolute;inset:0;background:#f22;opacity:0}#al.on #ft{animation:fl .22s linear 4}
+#ft{position:absolute;inset:0;background:#f22;opacity:0}#al.on #ft{animation:fl .34s linear 3}
 #al .at{position:absolute;left:0;right:0;top:36%;text-align:center}#al .a1{font-size:clamp(34px,10vw,76px);font-weight:800;letter-spacing:.2em;color:#ff3b30;text-shadow:0 0 24px #f00,0 0 60px #a00;animation:bk .5s steps(1) infinite}
 #al .a2{margin-top:10px;font-size:clamp(11px,3vw,18px);letter-spacing:.3em;color:#ffb3a8;text-shadow:0 0 12px #f00;animation:bk .5s steps(1) infinite .25s}
 @keyframes rl{0%{opacity:1}50%{opacity:.25}}@keyframes sl{to{background-position:72px 0}}@keyframes fl{0%{opacity:.55}100%{opacity:0}}@keyframes bk{0%{opacity:1}50%{opacity:.08}}
 #fx{position:fixed;inset:0;pointer-events:none;z-index:12;opacity:0;background:#fff}#fx.on{animation:fx .9s ease-out}@keyframes fx{0%{opacity:.9;background:#fff}25%{background:#f33;opacity:.55}100%{opacity:0}}
 #ds2 span{display:inline-block;margin:0 4px;font-size:28px}#ds2 .pop{color:#ffd24a;text-shadow:0 0 14px #fa0;animation:popx .55s cubic-bezier(.2,1.7,.4,1) both}#ds2 .dim{color:#556;opacity:.6}@keyframes popx{0%{transform:scale(0) rotate(-40deg);opacity:0}100%{transform:scale(1) rotate(0);opacity:1}}
 #pD.win h2{color:#7fffd0;text-shadow:0 0 18px #2fd}#pD.lose h2{color:#ff5a4a;text-shadow:0 0 18px #f00}#pD.lose .hd{border-left-color:#ff4a3a}
+@media(prefers-reduced-motion:reduce){#al::before,#al .a1,#al .a2,#al .bar2{animation:none}#al.on #ft{animation:none;opacity:0}}
 </style><link rel="manifest" href="./manifest.webmanifest"><meta name="theme-color" content="#02030a"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Orbital Command"><link rel="apple-touch-icon" href="./icons/apple-touch-icon.png"><link rel="icon" href="./icons/icon-192.png"></head><body>
 <canvas id="c3"></canvas>
 <div id="hud">
