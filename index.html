@@ -68,5 +68,5 @@ setInterval(()=>{$('#utc').textContent=new Date().toISOString().slice(11,19)+' U
 $('#gd').onclick=()=>{location.href='./defence.html'};
 // Daily Challenge unlocks once the three training levels are cleared
 try{const st=JSON.parse(localStorage.getItem('od2')||'{}').stars||[0,0,0],d=document.querySelectorAll('.mr.lk')[1],sp=d.querySelector('span'),em=d.querySelector('em');
-if(st.every(x=>x>0)){d.classList.remove('lk');em.textContent='OPEN';sp.textContent='A new seeded puzzle every day. Retry as often as you like.';d.onclick=()=>{location.href='./defence.html?daily=1'}}else sp.textContent='Complete the three training levels to unlock.'}catch(e){}
+if(st.slice(0,3).every(x=>x>0)){d.classList.remove('lk');em.textContent='OPEN';sp.textContent='A new seeded puzzle every day. Retry as often as you like.';d.onclick=()=>{location.href='./defence.html?daily=1'}}else sp.textContent='Complete the three training levels to unlock.'}catch(e){}
 </script><script>if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));</script></body></html>
