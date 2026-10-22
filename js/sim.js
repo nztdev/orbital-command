@@ -20,33 +20,55 @@ h:["Commander, I regret to report a solar storm front racing in from the Sun, be
 "Threat: solar storm. Integrity 300. Bearing 0 degrees. Impact in {E} seconds. Shield damage 14 per second, all other types nil. Do let me know if you require anything further."]}];
 function posAt(it,t){const[,a,e,d]=OP[it.op],M=d*6.2832*t/(8*Math.pow(a,1.5));let E=M;for(let i=0;i<7;i++)E-=(E-e*Math.sin(E)-M)/(1-e*Math.cos(E));const px=a*(Math.cos(E)-e),py=a*Math.sqrt(1-e*e)*Math.sin(E),c=Math.cos(it.ang),s=Math.sin(it.ang);return[px*c-py*s,px*s+py*c]}
 function orbitPts(it,n=90){const[,a,ec,d]=OP[it.op],c=Math.cos(it.ang),s=Math.sin(it.ang),o=[];for(let i=0;i<=n;i++){const e=i/n*6.2832,px=a*(Math.cos(e)-ec),py=a*Math.sqrt(1-ec*ec)*Math.sin(e)*d;o.push([px*c-py*s,px*s+py*c])}return o}
-function sim(m,pl,h=.1){const o={st:[],win:false,hit:null};let hp=m.hp,t=0;
-for(;t<=80;t+=h){const tp=[m.p[0]+m.v[0]*t,m.p[1]+m.v[1]*t],sh=pl.map(it=>posAt(it,t)),inr=sh.map((p,i)=>Math.hypot(p[0]-tp[0],p[1]-tp[1])<DT[pl[i].ty].rg+m.rad);
-if(t>0)inr.forEach((b,i)=>{if(b)hp-=DT[pl[i].ty].d[m.k]*h});hp=Math.max(0,hp);o.st.push({t,tp,sh,inr,hp});
-if(hp<=0){o.win=true;break}if(Math.hypot(...tp)<=m.hit){o.hit=t;break}}o.end=t;return o}
-LV.forEach(m=>m.eta=Math.round(sim(m,[]).end));
+// ---------- multi-threat simulation ----------
+// A level is either a single threat object {k,hp,rad,hit,p,v} or has threats:[...] (each may spawn later via t0).
+const threatsOf=m=>m.threats||[m],hpTotal=m=>threatsOf(m).reduce((s,x)=>s+x.hp,0);
+function mkT(k,bearDeg,sp,d0,hp,t0){const b=bearDeg*A,p=[10*Math.cos(b),10*Math.sin(b)],n=[-Math.sin(b),Math.cos(b)],T=[n[0]*d0,n[1]*d0],dl=Math.hypot(T[0]-p[0],T[1]-p[1]);
+ return{k,hp,rad:[.25,.7,.8][k],hit:[1.1,1.8,1.1][k],p,v:[(T[0]-p[0])/dl*sp,(T[1]-p[1])/dl*sp],t0:t0||0,bear:Math.round(((bearDeg%360)+360)%360)}}
+// Every defender fires at the nearest living threat inside its range. Any threat reaching Earth ends the run; killing all of them wins.
+function sim(m,pl,h=.1){const T=threatsOf(m),hp=T.map(x=>x.hp),al=T.map(()=>true),o={st:[],win:false,hit:null,hitIdx:-1};let t=0;
+for(;t<=100;t+=h){
+ const TP=T.map(x=>{const u=t-(x.t0||0);return u<0?null:[x.p[0]+x.v[0]*u,x.p[1]+x.v[1]*u]}),sh=pl.map(it=>posAt(it,t)),
+ tg=sh.map((p,i)=>{let b=-1,bd=1e9;for(let j=0;j<T.length;j++){const q=TP[j];if(!al[j]||!q)continue;const d=Math.hypot(p[0]-q[0],p[1]-q[1]);if(d<DT[pl[i].ty].rg+T[j].rad&&d<bd){bd=d;b=j}}return b});
+ if(t>0)tg.forEach((j,i)=>{if(j>=0)hp[j]-=DT[pl[i].ty].d[T[j].k]*h});
+ for(let j=0;j<T.length;j++)if(al[j]&&hp[j]<=0){hp[j]=0;al[j]=false}
+ o.st.push({t,TP,AL:al.slice(),HP:hp.slice(),hpt:hp.reduce((a,b)=>a+b,0),sh,tg,inr:tg.map(j=>j>=0),tp:TP[0]||T[0].p,hp:hp[0]});
+ if(!al.some(a=>a)){o.win=true;break}
+ let hi=-1;for(let j=0;j<T.length;j++)if(al[j]&&TP[j]&&Math.hypot(TP[j][0],TP[j][1])<=T[j].hit){hi=j;break}
+ if(hi>=0){o.hit=t;o.hitIdx=hi;break}}
+o.end=t;return o}
+// Level 4: the first mixed wave, with no recommended layout
+{const T=[mkT(0,40,.2,0,200,0),mkT(1,250,.25,1,200,6)];
+LV.push({n:'Twin Strike',threats:T,types:[0,1],lim:5,par:4,bear:'40° and 250°',k:0,hp:400,
+cls:'My analysis: two contacts of differing nature, a rocky body and a debris cloud, arriving at different times.',
+h:["Commander, two contacts are inbound: an asteroid from bearing 40 degrees and a debris swarm from bearing 250 degrees, the first impact in about {E} seconds. Interceptors will serve against the asteroid and sweepers against the swarm. You have five launches, so each defender must earn its place. I am afraid I cannot mark a layout this time.",
+"Two contacts: an asteroid from bearing 40 degrees and a debris swarm from bearing 250 degrees. First impact in about {E} seconds. Interceptors for the asteroid, sweepers for the swarm. Defenders engage the nearest contact in range, so mind your overlaps.",
+"Threats: asteroid, integrity 200, bearing 40 degrees; debris swarm, integrity 200, bearing 250 degrees. First impact in {E} seconds. Interceptor 12 and 3, sweeper 1 and 14, against asteroid and swarm respectively. Defenders target the nearest contact in range."]})}
+LV.forEach(m=>{m.hpT=hpTotal(m);m.eta=Math.round(sim(m,[]).end)});
 // ---------- Daily Challenge generator (seeded by UTC date; same puzzle for everyone) ----------
 function rng32(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 const dayKey=(d=new Date())=>d.getUTCFullYear()*10000+(d.getUTCMonth()+1)*100+d.getUTCDate();
 const dayLabel=k=>Math.floor(k/10000)+'-'+String(Math.floor(k/100)%100).padStart(2,'0')+'-'+String(k%100).padStart(2,'0');
 const prevDay=k=>dayKey(new Date(Date.UTC(Math.floor(k/10000),Math.floor(k/100)%100-1,k%100-1)));
 const MODS=[['none',null],['no low orbits',[1,2]],['low orbits only',[0,3]],['no retrograde',[0,1,2]],['high or elliptical only',[1,2]]];
-function greedyPlan(m,cands,max){const S=[];for(let c=0;c<max;c++){let bh=1e9,bc=null;for(const cd of cands){const r=sim(m,S.concat(cd),.2),h=r.st[r.st.length-1].hp;if(h<bh){bh=h;bc=cd}}if(!bc)return null;S.push(bc);if(bh<=0&&sim(m,S).win)return S}return null}
+function greedyPlan(m,cands,max){const S=[];for(let c=0;c<max;c++){let bh=1e9,bc=null;for(const cd of cands){const r=sim(m,S.concat(cd),.2),h=r.st[r.st.length-1].hpt;if(h<bh){bh=h;bc=cd}}if(!bc)return null;S.push(bc);if(bh<=0&&sim(m,S).win)return S}return null}
+const KN=['Asteroid','Debris Swarm','Solar Storm'];
 function makeDaily(key){
  const wd=(new Date(Date.UTC(Math.floor(key/10000),Math.floor(key/100)%100-1,key%100)).getUTCDay()+6)%7,diff=[.1,.25,.4,.55,.7,.9,1][wd];
  let best=null;
- for(let att=0;att<40;att++){
-  const R=rng32(key*7919+att*104729),k=Math.floor(R()*3),b=R()*360*A,sp=[.17+R()*.09,.2+R()*.1,.24+R()*.08][k],d0=k==1?.2+R()*1.2:(R()-.5)*.5;
-  const p=[10*Math.cos(b),10*Math.sin(b)],n=[-Math.sin(b),Math.cos(b)],T=[n[0]*d0,n[1]*d0],dl=Math.hypot(T[0]-p[0],T[1]-p[1]),v=[(T[0]-p[0])/dl*sp,(T[1]-p[1])/dl*sp];
-  const hp=Math.round([200,200,300][k]*(1.15+1.1*diff+R()*.3)/10)*10,rad=[.25,.7,.8][k],hit=[1.1,1.8,1.1][k];
-  const mod=R()<.35+.5*diff?MODS[1+Math.floor(R()*4)]:MODS[0],ops=mod[1]||[0,1,2,3],types=[k];[0,1,2].forEach(t=>{if(t!=k&&R()<.5)types.push(t)});types.sort();
-  const m={k,hp,rad,hit,p,v},cands=[];ops.forEach(op=>{for(let g=0;g<24;g++)cands.push({ty:k,op,ang:g*15*A})});
-  const sol=greedyPlan(m,cands,4),par=sol?sol.length:0;
-  if(!par||par<(diff<.3?2:3))continue;
-  const code=String.fromCharCode(65+Math.floor(R()*26))+String.fromCharCode(65+Math.floor(R()*26)),name=['Asteroid '+(key%100+2000)+' '+code,'Debris Swarm '+code,'Solar Storm '+code][k],bear=Math.round((b/A+360)%360);
-  const dm=DT.map((d,i)=>d.n+' '+d.d[k]+'/s').join(', '),mods=mod[0]=='none'?'no orbit restrictions':mod[0],lim=Math.min(5,par+1);
-  best={n:name,k,hp,rad,hit,p,v,bear:bear+'°',types,ops,lim,par,sol,mods,diff,daily:true,key,
+ for(let att=0;att<40&&!best;att++){
+  const R=rng32(key*7919+att*104729),k=Math.floor(R()*3),b=R()*360,sp=[.17+R()*.09,.2+R()*.1,.24+R()*.08][k],d0=k==1?.2+R()*1.2:(R()-.5)*.5,mult=diff>=.55&&R()<.6;
+  const hpf=1.15+1.1*diff+R()*.3,T=[mkT(k,b,sp,d0,Math.round([200,200,300][k]*hpf*(mult?.7:1)/10)*10,0)];
+  if(mult){const k2=R()<.7?(k+1+Math.floor(R()*2))%3:k,b2=b+90+R()*180,sp2=[.17+R()*.09,.2+R()*.1,.24+R()*.08][k2],d2=k2==1?.2+R()*1.2:(R()-.5)*.5;T.push(mkT(k2,b2,sp2,d2,Math.round([200,200,300][k2]*hpf*.7/10)*10,4+Math.round(R()*10)))}
+  const mod=R()<.35+.5*diff?MODS[1+Math.floor(R()*4)]:MODS[0],ops=mod[1]||[0,1,2,3],need=[...new Set(T.map(x=>x.k))].sort(),types=need.slice();[0,1,2].forEach(t=>{if(!need.includes(t)&&R()<.5)types.push(t)});types.sort();
+  const m={threats:T,k:T[0].k,hp:T[0].hp,rad:T[0].rad,hit:T[0].hit,p:T[0].p,v:T[0].v},cands=[];ops.forEach(op=>need.forEach(ty=>{for(let g=0;g<24;g++)cands.push({ty,op,ang:g*15*A})}));
+  const sol=greedyPlan(m,cands,mult?5:4),par=sol?sol.length:0;
+  if(!par||par<(mult?3:diff<.3?2:3))continue;
+  const code=String.fromCharCode(65+Math.floor(R()*26))+String.fromCharCode(65+Math.floor(R()*26)),
+  name=mult?'Twin Threat '+code:[ 'Asteroid '+(key%100+2000)+' '+code,'Debris Swarm '+code,'Solar Storm '+code][k],
+  bears=T.map(x=>x.bear),dm=DT.map(d=>d.n+' '+d.d.join('/')+' vs asteroid/debris/storm').join('; '),mods=mod[0]=='none'?'no orbit restrictions':mod[0],lim=Math.min(6,par+1);
+  best={n:name,k:T[0].k,hp:T[0].hp,rad:T[0].rad,hit:T[0].hit,p:T[0].p,v:T[0].v,threats:T,bear:bears.join('° and ')+'°',types,ops,lim,par,sol,mods,diff,daily:true,key,
    cls:'Constraints: '+mods+'. Launch budget '+lim+'.',
-   h:Array(3).fill('Threat: '+name+'. Integrity '+hp+'. Bearing '+bear+' degrees. Impact in {E} seconds. Damage per second: '+dm+'. Constraints: '+mods+'. Launch budget '+lim+'. The rest is in your hands, Commander.')};
-  best.eta=Math.round(sim(best,[]).end);break}
+   h:Array(3).fill('Threats: '+T.map(x=>KN[x.k].toLowerCase()+', integrity '+x.hp+', bearing '+x.bear+' degrees').join('; ')+'. First impact in {E} seconds. Damage per second: '+DT.map(d=>d.n.toLowerCase()+' '+d.d.join('/')).join(', ')+' (asteroid, debris, storm). Constraints: '+mods+'. Launch budget '+lim+'. The rest is in your hands, Commander.')};
+  best.hpT=hpTotal(best);best.eta=Math.round(sim(best,[]).end)}
  return best}
