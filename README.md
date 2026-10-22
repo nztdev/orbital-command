@@ -15,6 +15,7 @@ orbital-command/
 ├── js/
 │   ├── sim.js            # deterministic orbit simulation and level data (no DOM)
 │   └── globe.js          # realistic Earth (CDN textures, generated fallback)
+├── ROADMAP.md            # where the project stands and what comes next
 └── README.md
 ```
 
@@ -32,3 +33,4 @@ orbital-command/
 - Progress and the Solar Sandbox fleet are saved in the browser (localStorage).
 - **Offline / install:** after one online visit the pages, Three.js, fonts and Earth textures are cached, so the game runs offline and can be added to the home screen. Bump `CACHE` in `sw.js` (for example `oc-v2`) on each release so players get updates.
 - **Daily Challenge:** `defence.html?daily=1` generates a seeded puzzle from the UTC date (same for everyone, no server). It unlocks in the menu after the three training levels. Progress, attempts and streak are stored in `localStorage` (`od2d`).
+- **Levels:** `js/sim.js` holds the levels. Level 4 is the first mixed wave. Daily puzzles can also contain two threats on harder days.
