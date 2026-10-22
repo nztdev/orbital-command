@@ -73,6 +73,7 @@ canvas#tl{width:100%;height:46px;display:block;background:#050a18;border-radius:
 <script>
 const $=s=>document.querySelector(s),V=(x,y,z)=>new T3.Vector3(x,y,z),narrow=()=>innerWidth<820;let LIM=4;
 let P={stars:[0,0,0],clk:false,tier:0,voice:true};try{Object.assign(P,JSON.parse(localStorage.getItem('od2')||'{}'))}catch(e){}
+while(P.stars.length<LV.length)P.stars.push(0);
 const save=()=>{try{localStorage.setItem('od2',JSON.stringify(P))}catch(e){}};
 let LI=0,plan=[],res,pt=0,playing=false,commitRun=false,stage='gate',sel={ty:0,op:1},ang=0,clk=90,armed=false,cs=null,dirty=true,yw=.6,drag=null,subT,talk=false,talkUntil=0,AC;
 function loadDaily(){const k=dayKey();try{const c=JSON.parse(localStorage.getItem('od2g')||'null');if(c&&c.key==k&&c.m)return c.m}catch(e){}const m=makeDaily(k);try{localStorage.setItem('od2g',JSON.stringify({key:k,m}))}catch(e){}return m}
@@ -88,11 +89,15 @@ s3.add(new T3.AmbientLight(0x445577,.3));const sl=new T3.DirectionalLight(0xfff0
 const EARTH=createEarth(s3);
 {const p=new Float32Array(2400);for(let i=0;i<800;i++){const u=Math.sin(i*91.7),a=i*2.399,s=Math.sqrt(1-u*u);p.set([200*s*Math.cos(a),200*u,200*s*Math.sin(a)],i*3)}s3.add(new T3.Points(new T3.BufferGeometry().setAttribute('position',new T3.BufferAttribute(p,3)),new T3.PointsMaterial({size:1.2,sizeAttenuation:false,color:0xccddff})))}
 const g3=new T3.Group(),gh=new T3.Group(),pv=new T3.Group();s3.add(g3,gh,pv);let sh3=[];
-const ast=new T3.Mesh(new T3.IcosahedronGeometry(.24,1),new T3.MeshStandardMaterial({color:0xb9a58f,roughness:1,flatShading:true})),
-swp=new T3.Points(new T3.BufferGeometry().setAttribute('position',new T3.BufferAttribute(new Float32Array(44*3),3)),new T3.PointsMaterial({color:0xaab0c0,size:.09})),
-stm=new T3.Mesh(new T3.SphereGeometry(1.6,24,16),new T3.MeshBasicMaterial({color:0xffc040,transparent:true,opacity:.35,blending:T3.AdditiveBlending,depthWrite:false}));
-swp.frustumCulled=false;s3.add(ast,swp,stm);
-const mrk=(()=>{const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');x.strokeStyle='#ff5a4a';x.lineWidth=6;x.beginPath();x.arc(64,64,52,0,7);x.stroke();x.beginPath();x.moveTo(64,2);x.lineTo(64,24);x.moveTo(64,104);x.lineTo(64,126);x.moveTo(2,64);x.lineTo(24,64);x.moveTo(104,64);x.lineTo(126,64);x.stroke();return new T3.Sprite(new T3.SpriteMaterial({map:new T3.CanvasTexture(c),transparent:true,depthTest:false}))})();s3.add(mrk);
+
+const mrkTex=(()=>{const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');x.strokeStyle='#ff5a4a';x.lineWidth=6;x.beginPath();x.arc(64,64,52,0,7);x.stroke();x.beginPath();x.moveTo(64,2);x.lineTo(64,24);x.moveTo(64,104);x.lineTo(64,126);x.moveTo(2,64);x.lineTo(24,64);x.moveTo(104,64);x.lineTo(126,64);x.stroke();return new T3.CanvasTexture(c)})();
+let TV=[];const thG=new T3.Group();s3.add(thG);
+function mkTV(k){const g=new T3.Group();let body;
+if(k==0)body=new T3.Mesh(new T3.IcosahedronGeometry(.24,1),new T3.MeshStandardMaterial({color:0xb9a58f,roughness:1,flatShading:true}));
+else if(k==1){const a=new Float32Array(44*3);swm.forEach((o,i)=>a.set([o[0],Math.sin(i*7)*.3,-o[1]],i*3));body=new T3.Points(new T3.BufferGeometry().setAttribute('position',new T3.BufferAttribute(a,3)),new T3.PointsMaterial({color:0xaab0c0,size:.09}));body.frustumCulled=false}
+else body=new T3.Mesh(new T3.SphereGeometry(1.6,24,16),new T3.MeshBasicMaterial({color:0xffc040,transparent:true,opacity:.35,blending:T3.AdditiveBlending,depthWrite:false}));
+const mk=new T3.Sprite(new T3.SpriteMaterial({map:mrkTex,transparent:true,depthTest:false}));g.add(body,mk);g.visible=false;thG.add(g);return{g,body,mk,k}}
+function buildThreats(){clr(thG);TV=threatsOf(lv()).map(x=>mkTV(x.k))}
 const swm=Array.from({length:44},(_,i)=>[Math.cos(i*2.399)*Math.sqrt(i/44)*.95,Math.sin(i*2.399)*Math.sqrt(i/44)*.95]);
 const orb3=(it,col,op)=>new T3.Line(new T3.BufferGeometry().setFromPoints(orbitPts(it).map(p=>V(p[0],0,-p[1]))),new T3.LineBasicMaterial({color:col,transparent:true,opacity:op}));
 const dot=(c,r)=>new T3.Mesh(new T3.SphereGeometry(r,12,8),new T3.MeshBasicMaterial({color:c}));
@@ -101,14 +106,14 @@ const clr=g=>{while(g.children.length)g.remove(g.children[0])};
 const UY=V(0,1,0),GT=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d'),g=x.createRadialGradient(32,32,0,32,32,32);g.addColorStop(0,'#fff');g.addColorStop(.3,'rgba(255,255,255,.5)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,64,64);return new T3.CanvasTexture(c)})(),
 RT=(()=>{const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');x.strokeStyle='#fff';x.lineWidth=6;x.shadowColor='#fff';x.shadowBlur=10;x.beginPath();x.arc(64,64,52,0,7);x.stroke();return new T3.CanvasTexture(c)})();
 const spr=(tex,col,sz,op)=>{const m=new T3.Sprite(new T3.SpriteMaterial({map:tex,color:col,blending:T3.AdditiveBlending,depthWrite:false,transparent:true,opacity:op}));m.scale.setScalar(sz);return m};
-const NP=600,pp=new Float32Array(NP*3),pc=new Float32Array(NP*3),pvv=new Float32Array(NP*3),pl=new Float32Array(NP),pm=new Float32Array(NP),pcol=new Float32Array(NP*3),pgeo=new T3.BufferGeometry();let pi_=0,shake=0,zm=1,zoomT=1,prevInr=[];
+const NP=600,pp=new Float32Array(NP*3),pc=new Float32Array(NP*3),pvv=new Float32Array(NP*3),pl=new Float32Array(NP),pm=new Float32Array(NP),pcol=new Float32Array(NP*3),pgeo=new T3.BufferGeometry();let pi_=0,shake=0,zm=1,zoomT=1,prevInr=[],prevAL=null;
 pgeo.setAttribute('position',new T3.BufferAttribute(pp,3));pgeo.setAttribute('color',new T3.BufferAttribute(pc,3));
 const pts=new T3.Points(pgeo,new T3.PointsMaterial({size:.16,map:GT,vertexColors:true,transparent:true,depthWrite:false,blending:T3.AdditiveBlending}));pts.frustumCulled=false;s3.add(pts);
 function emit(x,y,z,vx,vy,vz,life,r,g,b){const i=pi_++%NP;pp.set([x,y,z],i*3);pvv.set([vx,vy,vz],i*3);pl[i]=pm[i]=life;pcol.set([r,g,b],i*3)}
 function psUpdate(dt){for(let i=0;i<NP;i++){if(pl[i]>0){pl[i]-=dt;const k=Math.max(0,pl[i]/pm[i]);for(let a=0;a<3;a++){pp[i*3+a]+=pvv[i*3+a]*dt;pc[i*3+a]=pcol[i*3+a]*k}}else pc[i*3]=pc[i*3+1]=pc[i*3+2]=0}pgeo.attributes.position.needsUpdate=true;pgeo.attributes.color.needsUpdate=true}
 const bursts=[];function burst(tex,col,x,y,z,s0,s1,dur,op=1){const m=spr(tex,col,s0,op);m.position.set(x,y,z);s3.add(m);bursts.push({m,t:0,dur,s0,s1,op})}
 function burstUpdate(dt){for(let i=bursts.length-1;i>=0;i--){const b=bursts[i];b.t+=dt;const k=b.t/b.dur;if(k>=1){s3.remove(b.m);bursts.splice(i,1);continue}b.m.scale.setScalar(b.s0+(b.s1-b.s0)*(1-(1-k)*(1-k)));b.m.material.opacity=b.op*(1-k)}}
-function boomAt(tp,big){const X=tp[0],Z=-tp[1],cr=[[1,.7,.25],[.75,.9,.75],[1,.9,.35]][lv().k];burst(GT,0xffe0a0,X,0,Z,.4,big?5:3.6,.7);burst(RT,0x9fe0ff,X,0,Z,.3,big?6:4.5,1);for(let i=0;i<70;i++){const a=Math.random()*6.283,b=(Math.random()-.5)*2,sp=.8+Math.random()*2.6;emit(X,0,Z,Math.cos(a)*sp,b*sp*.6,Math.sin(a)*sp,.9+Math.random()*.8,cr[0],cr[1]*(.75+Math.random()*.4),cr[2])}}
+function boomAt(tp,big,k=0){const X=tp[0],Z=-tp[1],cr=[[1,.7,.25],[.75,.9,.75],[1,.9,.35]][k];burst(GT,0xffe0a0,X,0,Z,.4,big?5:3.6,.7);burst(RT,0x9fe0ff,X,0,Z,.3,big?6:4.5,1);for(let i=0;i<70;i++){const a=Math.random()*6.283,b=(Math.random()-.5)*2,sp=.8+Math.random()*2.6;emit(X,0,Z,Math.cos(a)*sp,b*sp*.6,Math.sin(a)*sp,.9+Math.random()*.8,cr[0],cr[1]*(.75+Math.random()*.4),cr[2])}}
 function impactAt(tp){const L=Math.hypot(...tp)||1,ux=tp[0]/L,uz=-tp[1]/L,X=ux*1.04,Z=uz*1.04;burst(GT,0xff7a3a,X,0,Z,.5,4.2,.8);burst(RT,0xff4a2a,X,0,Z,.4,7,1.3);burst(RT,0xffd0a0,X,0,Z,.2,4,.7);for(let i=0;i<110;i++){const a=Math.random()*6.283,sp=.6+Math.random()*2.8;emit(X,0,Z,ux*sp*1.4+Math.cos(a)*sp*.7,(Math.random()-.3)*sp,uz*sp*1.4+Math.sin(a)*sp*.7,.9+Math.random()*1,1,.35+Math.random()*.4,.1)}}
 function flashFx(){const f=$('#fx');f.classList.remove('on');void f.offsetWidth;f.classList.add('on')}
 function tone(f0,f1,dur,type='sine',vol=.05,delay=0){if(!P.voice||!AC)return;try{const t=AC.currentTime+delay,o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+dur);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+dur+.02)}catch(e){}}
@@ -128,7 +133,7 @@ bm=new T3.Mesh(new T3.CylinderGeometry(.022,.022,1,6),new T3.MeshBasicMaterial({
 let hpos=null;
 function preview(){clr(pv);hpos=null;pv.userData.hh=null;if(stage!='plan'||plan.length>=LIM)return;const it={ty:sel.ty,op:sel.op,ang:ang*A},m=spr(RT,0xffffff,.5,.95),hh=spr(GT,0xffffff,.9,.45),p=posAt(it,0),
 spoke=new T3.Line(new T3.BufferGeometry().setFromPoints([V(),V(p[0],0,-p[1])]),new T3.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.25}));m.position.set(p[0],0,-p[1]);hh.position.copy(m.position);hpos=m.position.clone();pv.userData.hh=hh;pv.add(orbD(it,0xffffff,.9),spoke,hh,m)}
-function buildGhost(){clr(gh);if(P.tier==0&&!daily)lv().rec.forEach(([op,a])=>{const it={ty:lv().k,op,ang:a*A},c=DT[lv().k].c,m=spr(RT,c,.3,.8),p=posAt(it,0);m.position.set(p[0],0,-p[1]);gh.add(orbD(it,c,.75),m)})}
+function buildGhost(){clr(gh);if(P.tier==0&&!daily&&lv().rec)lv().rec.forEach(([op,a])=>{const it={ty:lv().k,op,ang:a*A},c=DT[lv().k].c,m=spr(RT,c,.3,.8),p=posAt(it,0);m.position.set(p[0],0,-p[1]);gh.add(orbD(it,c,.75),m)})}
 // ---------- holographic previews (rendered into the deploy cards) ----------
 const hsc=new T3.Scene(),hcam=new T3.PerspectiveCamera(32,1.2,.1,50),HOLO=[],HORB=[];hcam.position.set(0,2.1,3.3);hcam.lookAt(0,.05,0);
 const hm=c=>new T3.LineBasicMaterial({color:c,transparent:true,opacity:.9,blending:T3.AdditiveBlending,depthWrite:false});
@@ -169,9 +174,9 @@ if(s=='plan'){show('pR',true);show('pJ',true);show('pB',false);$('#pB').classLis
 if(s=='run'){show('pR',true);show('pJ',true);show('pB',false);$('#pB').classList.add('running');armed=false}
 if(s=='debrief'){show('pB',true);show('pD',false)}preview()}
 // ---------- analysis briefing ----------
-function startAnalysis(){const m=lv();setStage('analysis');
-cs={el:0,i:0,ph:0,silent:false,L:['Good day, Commander. I have a live feed of the incoming threat: the '+m.n+'.','It approaches from bearing '+m.bear.replace('°',' degrees')+', with impact expected in '+m.eta+' seconds.',m.cls,m.h[daily?2:P.tier].replace('{E}',m.eta)]};
-if(!daily&&P.tier==0)cs.L.push('I have taken the liberty of marking a recommended layout on your display. Good luck, Commander.');fcp.set(0,12,14);flk.set(0,0,0);$('#jrp').hidden=true;csNext()}
+function startAnalysis(){const m=lv(),n=threatsOf(m).length;setStage('analysis');
+cs={el:0,i:0,ph:0,silent:false,L:['Good day, Commander. I have a live feed of the incoming '+(n>1?'threats':'threat')+': the '+m.n+'.',n>1?'There are '+n+' contacts inbound. The first impact is expected in '+m.eta+' seconds.':'It approaches from bearing '+m.bear.replace('°',' degrees')+', with impact expected in '+m.eta+' seconds.',m.cls,m.h[daily?2:P.tier].replace('{E}',m.eta)]};
+if(!daily&&P.tier==0&&m.rec)cs.L.push('I have taken the liberty of marking a recommended layout on your display. Good luck, Commander.');fcp.set(0,12,14);flk.set(0,0,0);$('#jrp').hidden=true;csNext()}
 function csNext(){if(!cs)return;if(cs.i>=cs.L.length)return csEnd();const s=cs.L[cs.i++],me=cs,tts=P.voice&&!me.silent&&window.speechSynthesis;me.ph=me.i;$('#cap').textContent=s;let done=false;
 const go=()=>{if(done||cs!==me)return;done=true;clearTimeout(me.to);talk=false;me.to=setTimeout(csNext,450)};me.go=go;me.cur=s;me.to=setTimeout(go,tts?s.length*140+3000:Math.max(3000,s.length*70));
 if(tts){speechSynthesis.cancel();const u=ut(s);u.onend=u.onerror=go;speechSynthesis.speak(u)}else talkUntil=performance.now()+s.length*65}
@@ -183,23 +188,23 @@ function chips(){const mk=(h,k,i,n,sm)=>{const d=document.createElement('div');d
 $('#ds').innerHTML='';$('#os').innerHTML='';lv().types.forEach(t=>mk('#ds','ty',t,DT[t].n,['vs asteroids','vs debris','vs storms'][t]));OP.forEach((o,i)=>{if(!lv().ops||lv().ops.includes(i))mk('#os','op',i,o[0],o[4])});mark()}
 function lvChips(){$('#lvs').innerHTML='';if(daily){const b=document.createElement('button');b.className='on';b.disabled=true;b.textContent='DAILY '+dayLabel(lv().key).slice(5)+(D.best?' '+'★'.repeat(D.best.stars):'');$('#lvs').append(b);return}
 LEV.forEach((m,i)=>{const b=document.createElement('button'),open=i==0||P.stars[i-1]>0;b.textContent='L'+(i+1)+(P.stars[i]?' '+'★'.repeat(P.stars[i]):'')+(open?'':' 🔒');b.disabled=!open;b.className=i==LI?'on':'';b.onclick=()=>enterLevel(i);$('#lvs').append(b)})}
-function prep(i){LI=i;plan=[];ang=0;$('#ag').value=0;$('#agv').textContent='0°';sel={ty:lv().types[0],op:lv().ops?lv().ops[0]:1};LIM=lv().lim||4;pt=0;playing=false;cs=null;talk=false;shake=0;zoomT=1;prevInr=[];window.speechSynthesis&&speechSynthesis.cancel();recalc();chips();buildGhost();lvChips()}
+function prep(i){LI=i;plan=[];ang=0;$('#ag').value=0;$('#agv').textContent='0°';sel={ty:lv().types[0],op:lv().ops?lv().ops[0]:1};LIM=lv().lim||4;pt=0;playing=false;cs=null;talk=false;shake=0;zoomT=1;prevInr=[];prevAL=null;window.speechSynthesis&&speechSynthesis.cancel();recalc();chips();buildGhost();buildThreats();lvChips()}
 function enterLevel(i){prep(i);setStage('alert');const id=i,al=$('#al');al.classList.remove('on');void al.offsetWidth;al.classList.add('on');siren();
 setTimeout(()=>{al.classList.remove('on');if(stage=='alert'&&LI==id)startAnalysis()},3800)}
-function report(commit){const m=lv(),l=res.st[res.st.length-1],cov=res.st.reduce((s,q)=>s+q.inr.filter(Boolean).length*.1,0),need=m.hp/Math.max(...DT.map(d=>d.d[m.k]));
-let s=(res.win?(commit?'Splendid work, Commander. ':'Dry run complete. ')+'The threat was neutralised at '+l.t.toFixed(0)+' seconds.':(commit?'Regrettably, Commander, ':'Dry run complete. ')+'we would suffer impact at '+res.hit.toFixed(0)+' seconds, with '+Math.round(l.hp/m.hp*100)+' percent of the threat intact.')+' Coverage totalled '+cov.toFixed(1)+' seconds, against roughly '+need.toFixed(0)+' required.';
-if(!res.win)s+=cov==0?' Nothing engaged at all, which suggests the defender type may not suit this threat.':' Might I suggest adding coverage where it closes on Earth, or adjusting your start angles?';return s}
-function run(commit){if(!plan.length){say('Forgive me, Commander, but no defenders have been deployed.');return}pt=0;playing=true;commitRun=commit;if(commit)setStage('run')}
+function report(commit){const m=lv(),T=threatsOf(m),l=res.st[res.st.length-1],cov=res.st.reduce((s,q)=>s+q.inr.filter(Boolean).length*.1,0),need=m.hpT/Math.max(...DT.map(d=>Math.max(...d.d))),NM=['asteroid','debris swarm','solar storm'];
+let s=(res.win?(commit?'Splendid work, Commander. ':'Dry run complete. ')+(T.length>1?'All '+T.length+' threats were neutralised':'The threat was neutralised')+' by '+l.t.toFixed(0)+' seconds.':(commit?'Regrettably, Commander, ':'Dry run complete. ')+'we would suffer impact from the '+NM[T[res.hitIdx].k]+' at '+res.hit.toFixed(0)+' seconds, with '+Math.round(l.hpt/m.hpT*100)+' percent of the total threat integrity remaining.')+' Coverage totalled '+cov.toFixed(1)+' seconds, against roughly '+need.toFixed(0)+' required.';
+if(!res.win)s+=cov==0?' Nothing engaged at all, which suggests the defender type may not suit this threat.':' Might I suggest adding coverage where it closes on Earth'+(T.length>1?', and remember that each defender engages only the nearest contact':'')+', or adjusting your start angles?';return s}
+function run(commit){if(!plan.length){say('Forgive me, Commander, but no defenders have been deployed.');return}pt=0;playing=true;commitRun=commit;prevAL=null;prevInr=[];if(commit)setStage('run')}
 function finish(){const txt=report(commitRun),last=res.st[res.st.length-1],id=LI,m=lv();say(txt);
-if(res.win){boomAt(last.tp,commitRun);sfxBoom();if(commitRun){burst(GT,0x66ccff,0,0,0,3,4.2,1.4,.55);zoomT=.8}}
-else{impactAt(last.tp);sfxImpact();if(commitRun){shake=1.2;zoomT=.72;flashFx()}}
+if(res.win){if(commitRun){burst(GT,0x66ccff,0,0,0,3,4.2,1.4,.55);zoomT=.8}}
+else{impactAt(last.TP[res.hitIdx]||last.tp);sfxImpact();if(commitRun){shake=1.2;zoomT=.72;flashFx()}}
 if(!commitRun)return;let st=0;
 if(daily){D.attempts++;if(res.win){st=plan.length<=m.par?3:2;const b=D.best;if(!b||st>b.stars||(st==b.stars&&plan.length<b.used))D.best={stars:st,used:plan.length,plan:plan.map(p=>p.ty)};if(D.lastWin!=m.key){D.streak=D.lastWin==prevDay(m.key)?D.streak+1:1;D.lastWin=m.key}}saveD();lvChips()}
-else if(res.win){st=plan.length<=3?3:2;P.stars[LI]=Math.max(P.stars[LI],st);save();lvChips()}
+else if(res.win){st=plan.length<=(m.par||3)?3:2;P.stars[LI]=Math.max(P.stars[LI],st);save();lvChips()}
 setTimeout(()=>{if(stage!='run'||LI!=id)return;setStage('debrief');(res.win?sfxWin:sfxLose)();const pd=$('#pD');pd.classList.toggle('win',res.win);pd.classList.toggle('lose',!res.win);
 $('#dt').textContent=res.win?'EARTH SAFE':'IMPACT';$('#ds2').innerHTML=res.win?[1,2,3].map(i=>'<span class="'+(i<=st?'pop':'dim')+'" style="animation-delay:'+(.3+i*.35).toFixed(2)+'s">'+(i<=st?'★':'☆')+'</span>').join(''):'';
-$('#dx').textContent=daily?(res.win?'Par '+m.par+', you used '+plan.length+'. Attempts today: '+D.attempts+'. Streak: '+D.streak+' day'+(D.streak==1?'':'s')+'.':'The threat reached Earth. Retry as often as you like; your best result counts.'):(res.win?(LI<2?'The next level has been unlocked.':'Training complete. Conquest Campaign awaits.'):'The threat reached Earth. Adjust your defences and try again.');
-$('#dn').hidden=daily||!(res.win&&LI<2);$('#dsh').hidden=!(daily&&res.win);$('#dsh').textContent='Share result'},1800)}
+$('#dx').textContent=daily?(res.win?'Par '+m.par+', you used '+plan.length+'. Attempts today: '+D.attempts+'. Streak: '+D.streak+' day'+(D.streak==1?'':'s')+'.':'The threat reached Earth. Retry as often as you like; your best result counts.'):(res.win?(LI<LEV.length-1?(LI==2?'Training complete. The next level has been unlocked.':'The next level has been unlocked.'):'All current levels complete. More are on the way.'):'A threat reached Earth. Adjust your defences and try again.');
+$('#dn').hidden=daily||!(res.win&&LI<LEV.length-1);$('#dsh').hidden=!(daily&&res.win);$('#dsh').textContent='Share result'},1800)}
 function shareDaily(){const m=lv(),b=D.best,sq=['🟦','🟩','🟨'],t='Orbital Command Daily '+dayLabel(m.key)+'\n'+['☄️','💫','☀️'][m.k]+' '+m.n+' · par '+m.par+'\n'+(b?b.plan.map(x=>sq[x]).join('')+' '+'⭐'.repeat(b.stars):'')+'\nAttempts: '+D.attempts+(D.streak>1?' · Streak '+D.streak:'')+'\n'+location.href.replace(/defence\.html.*$/,'index.html');
 if(navigator.share)navigator.share({text:t}).catch(()=>{});else if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>{$('#dsh').textContent='Copied ✓'},()=>prompt('Copy your result:',t));else prompt('Copy your result:',t)}
 // ---------- wiring ----------
@@ -223,32 +228,34 @@ const a=t*1.6;rx.fillStyle='rgba(76,201,255,.14)';rx.beginPath();rx.moveTo(cx,cx
 plan.forEach(it=>{rx.strokeStyle=DT[it.ty].c+'77';rx.beginPath();orbitPts(it).forEach((p,i)=>i?rx.lineTo(X(p[0]),Y(p[1])):rx.moveTo(X(p[0]),Y(p[1])));rx.stroke()});
 rx.fillStyle='#2a7fd0';rx.beginPath();rx.arc(cx,cx,S,0,7);rx.fill();
 plan.forEach((it,i)=>{const p=q.sh[i];if(!p)return;rx.fillStyle=DT[it.ty].c;if(q.inr[i]){rx.globalAlpha=.25;rx.beginPath();rx.arc(X(p[0]),Y(p[1]),DT[it.ty].rg*S,0,7);rx.fill();rx.globalAlpha=1}rx.beginPath();rx.arc(X(p[0]),Y(p[1]),mini?9:5,0,7);rx.fill()});
-rx.fillStyle='#ff5a4a';rx.beginPath();rx.arc(X(q.tp[0]),Y(q.tp[1]),mini?12:6,0,7);rx.fill()}
+q.TP.forEach((p,j)=>{if(p&&q.AL[j]){rx.fillStyle='#ff5a4a';rx.beginPath();rx.arc(X(p[0]),Y(p[1]),mini?12:6,0,7);rx.fill()}})}
 function tline(){const m=lv(),dp=Math.min(devicePixelRatio||1,2),w=tl.clientWidth;if(!w)return;if(tl.width!=Math.round(w*dp)){tl.width=Math.round(w*dp);tl.height=46*dp;tx.setTransform(dp,0,0,dp,0,0)}const h=46,E=res.end||1,X=t=>t/E*w;tx.clearRect(0,0,w,h);
-tx.fillStyle='rgba(255,255,255,.12)';tx.beginPath();tx.moveTo(0,h);res.st.forEach(q=>tx.lineTo(X(q.t),h-q.hp/m.hp*h));tx.lineTo(X(E),h);tx.fill();
-plan.forEach((it,i)=>{tx.fillStyle=DT[it.ty].c;res.st.forEach(q=>{if(q.inr[i])tx.fillRect(X(q.t),3+i*9,Math.max(1,w/res.st.length+.5),6)})});tx.fillStyle='#f55';tx.fillRect(X(pt),0,2,h)}
+tx.fillStyle='rgba(255,255,255,.12)';tx.beginPath();tx.moveTo(0,h);res.st.forEach(q=>tx.lineTo(X(q.t),h-q.hpt/m.hpT*h));tx.lineTo(X(E),h);tx.fill();
+plan.forEach((it,i)=>{tx.fillStyle=DT[it.ty].c;res.st.forEach(q=>{if(q.inr[i])tx.fillRect(X(q.t),2+i*7,Math.max(1,w/res.st.length+.5),5)})});tx.fillStyle='#f55';tx.fillRect(X(pt),0,2,h)}
 function wave(now){const w=wv.width,h=wv.height,on=talk||now<talkUntil;wx.clearRect(0,0,w,h);wx.fillStyle=on?'#4cc9ff':'rgba(76,201,255,.35)';for(let i=0;i<14;i++){const a=on?.2+.8*Math.abs(Math.sin(now*.011+i*.9)*Math.sin(now*.0063+i*1.7)):.07,bh=Math.max(3,a*h);wx.fillRect(i*(w/14)+2,(h-bh)/2,w/14-5,bh)}}
 // ---------- loop ----------
-function thr(m,tp,t,on){ast.visible=on&&m.k==0;swp.visible=on&&m.k==1;stm.visible=on&&m.k==2;mrk.visible=on;const X=tp[0],Z=-tp[1];ast.position.set(X,0,Z);ast.rotation.x+=.02;stm.position.set(X,0,Z);stm.scale.setScalar(1+.05*Math.sin(t*6));mrk.position.set(X,0,Z);mrk.scale.setScalar(.7+.08*Math.sin(t*5)+(m.k==2?1.4:m.k==1?.8:0));
-const a=swp.geometry.attributes.position;swm.forEach((o,i)=>a.setXYZ(i,X+o[0],Math.sin(i*7)*.3,Z-o[1]));a.needsUpdate=true}
-function feed(tp,fin,dt){const p=$('#pJ');if(p.classList.contains('off')||p.classList.contains('min'))return;const b=$('#feed').getBoundingClientRect();if(b.width<20)return;const m=lv(),d=Math.hypot(...m.v),ux=m.v[0]/d,uy=m.v[1]/d,k=1-Math.exp(-dt*1.6);
+function cstate(m,ts){const T=threatsOf(m);return{t:ts,TP:T.map(x=>{const u=ts-(x.t0||0);return u<0?null:[x.p[0]+x.v[0]*u,x.p[1]+x.v[1]*u]}),AL:T.map(()=>true),HP:T.map(x=>x.hp),hpt:m.hpT,sh:[],inr:[],tg:[]}}
+function prim(q){let b=0,bd=1e9;q.TP.forEach((p,j)=>{if(p&&q.AL[j]){const d=Math.hypot(p[0],p[1]);if(d<bd){bd=d;b=j}}});return b}
+function thrUpdate(q,t,ok,hideIdx){TV.forEach((v,j)=>{const p=q.TP[j],on=ok&&p&&q.AL[j]&&j!=hideIdx;v.g.visible=!!on;if(!on)return;v.g.position.set(p[0],0,-p[1]);if(v.k==0)v.body.rotation.x+=.02;else if(v.k==1)v.body.rotation.y+=.012;else v.body.scale.setScalar(1+.05*Math.sin(t*6));v.mk.scale.setScalar(.7+.08*Math.sin(t*5)+(v.k==2?1.4:v.k==1?.8:0))})}
+function feed(tp,v,fin,dt){const p=$('#pJ');if(p.classList.contains('off')||p.classList.contains('min'))return;const b=$('#feed').getBoundingClientRect();if(b.width<20)return;const d=Math.hypot(...v),ux=v[0]/d,uy=v[1]/d,k=1-Math.exp(-dt*1.6);
 fcp.lerp(fin?V(0,9,11):V(tp[0]-uy*3-ux*1.5,1.6,-(tp[1]+ux*3-uy*1.5)),k);flk.lerp(fin?V():V(tp[0],0,-tp[1]),k);fcam.position.copy(fcp);fcam.lookAt(flk);fcam.aspect=b.width/b.height;fcam.updateProjectionMatrix();
 const y=innerHeight-b.bottom;r3.setScissorTest(true);r3.setViewport(b.left,y,b.width,b.height);r3.setScissor(b.left,y,b.width,b.height);r3.render(s3,fcam);r3.setScissorTest(false);r3.setViewport(0,0,innerWidth,innerHeight)}
 let lt=performance.now();
 function frame(ms){requestAnimationFrame(frame);const dt=Math.min((ms-lt)/1000,.1),t=ms/1000;lt=ms;const m=lv();EARTH.tick(dt);psUpdate(dt);burstUpdate(dt);zm+=(zoomT-zm)*(1-Math.exp(-dt*2.5));shake=Math.max(0,shake-dt*1.1);
-if(playing){pt+=dt;if(pt>=res.end){pt=res.end;playing=false;finish()}$('#sc').value=pt/res.end*1000}
+const pl0=playing;if(playing){pt+=dt;if(pt>=res.end){pt=res.end;playing=false;finish()}$('#sc').value=pt/res.end*1000}
 const cl=P.clk&&armed&&stage=='plan';if(cl){clk-=dt;if(clk<=0){clk=0;if(plan.length)run(true);else clk=90}}$('#clk').textContent=cl?Math.floor(clk/60)+':'+String(Math.floor(clk%60)).padStart(2,'0'):'';
-let q,fin=false;if(cs){cs.el+=dt;const ts=Math.min(m.eta*.8,cs.el*1.5);q={tp:[m.p[0]+m.v[0]*ts,m.p[1]+m.v[1]*ts],sh:[],inr:[],hp:m.hp,t:ts};fin=cs.ph>=4}else q=res.st[Math.min(res.st.length-1,Math.round(pt/.1))];
-const gone=!cs&&q===res.st[res.st.length-1];thr(m,q.tp,t,!gone&&stage!='gate');if(dirty)rebuild();
-$('#tel').textContent='RNG '+Math.hypot(...q.tp).toFixed(1)+' · SPD '+Math.hypot(...m.v).toFixed(2)+' · T-'+Math.max(0,m.eta-q.t).toFixed(0)+'s';
-sh3.forEach((s,i)=>{const p=q.sh[i];if(!p)return;const on=q.inr[i]&&!gone;s.d.position.set(p[0],0,-p[1]);s.rg.position.copy(s.d.position);s.hl.position.copy(s.d.position);s.hl.scale.setScalar(.45+.08*Math.sin(t*4+i));s.lb.position.set(p[0],.3,-p[1]);s.rg.visible=s.bm.visible=s.mz.visible=on;
-if(on){const ax=p[0],az=-p[1],bx=q.tp[0],bz=-q.tp[1],dx=bx-ax,dz=bz-az,L=Math.hypot(dx,dz)||.01;fire(s,plan[i].ty,ax,az,bx,bz,dx,dz,L,dt)}else s.bb.visible=false});
-if(playing){q.inr.forEach((b,i)=>{if(b&&!prevInr[i])sfxFor(plan[i].ty)});prevInr=q.inr.slice()}
+let q,fin=false;if(cs){cs.el+=dt;q=cstate(m,Math.min(m.eta*.8,cs.el*1.5));fin=cs.ph>=4}else q=res.st[Math.min(res.st.length-1,Math.round(pt/.1))];
+const T=threatsOf(m),atEnd=!cs&&q===res.st[res.st.length-1],pi=prim(q),px_=q.TP[pi]||T[pi].p;
+thrUpdate(q,t,stage!='gate',atEnd?res.hitIdx:-2);if(dirty)rebuild();
+$('#tel').textContent=(T.length>1?'TGT '+(pi+1)+'/'+T.length+' · ':'')+'RNG '+Math.hypot(...px_).toFixed(1)+' · SPD '+Math.hypot(...T[pi].v).toFixed(2)+' · T-'+Math.max(0,(Math.hypot(...px_)-T[pi].hit)/Math.hypot(...T[pi].v)).toFixed(0)+'s';
+sh3.forEach((s,i)=>{const p=q.sh[i];if(!p)return;const j=q.tg[i],on=j>=0&&!(atEnd&&j==res.hitIdx);s.d.position.set(p[0],0,-p[1]);s.rg.position.copy(s.d.position);s.hl.position.copy(s.d.position);s.hl.scale.setScalar(.45+.08*Math.sin(t*4+i));s.lb.position.set(p[0],.3,-p[1]);s.rg.visible=s.bm.visible=s.mz.visible=on;
+if(on){const ax=p[0],az=-p[1],bx=q.TP[j][0],bz=-q.TP[j][1],dx=bx-ax,dz=bz-az,L=Math.hypot(dx,dz)||.01;fire(s,plan[i].ty,ax,az,bx,bz,dx,dz,L,dt)}else s.bb.visible=false});
+if(pl0){q.inr.forEach((b,i)=>{if(b&&!prevInr[i])sfxFor(plan[i].ty)});prevInr=q.inr.slice();if(prevAL)q.AL.forEach((a,j)=>{if(prevAL[j]&&!a&&q.TP[j]){boomAt(q.TP[j],commitRun,T[j].k);sfxBoom()}});prevAL=q.AL.slice()}else prevAL=null;
 if(pv.userData.hh)pv.userData.hh.scale.setScalar(.8+.2*Math.sin(t*5));const guides=!playing&&pt<.05;gh.visible=P.tier==0&&((stage=='plan'&&guides)||fin);pv.visible=stage=='plan'&&guides;
 if(!drag&&!hd&&!playing&&stage!='plan')yw+=dt*.03;const R=(narrow()?17:13)*zm,el=.62;cam.position.set(Math.sin(yw)*R*Math.cos(el),R*Math.sin(el),Math.cos(yw)*R*Math.cos(el));if(shake>0)cam.position.add(V((Math.random()-.5)*shake*.5,(Math.random()-.5)*shake*.5,(Math.random()-.5)*shake*.5));cam.lookAt(0,0,0);
 const j=$('#pJ'),pb=$('#pB'),jh=!j.classList.contains('off')&&!j.classList.contains('min')&&narrow()?j.getBoundingClientRect().bottom-44:0,bh=pb.classList.contains('off')?0:pb.getBoundingClientRect().height,tgt=(bh-jh)/(narrow()?2:2.6),oy=cam.userData.oy||0;
 cam.userData.oy=oy+(tgt-oy)*(1-Math.exp(-dt*6));cam.setViewOffset(innerWidth,innerHeight,0,cam.userData.oy,innerWidth,innerHeight);
-r3.render(s3,cam);feed(q.tp,fin,dt);holo(t);radar(q,t);if(pb.classList.contains('has')&&!pb.classList.contains('off'))tline();wave(ms)}
+r3.render(s3,cam);feed(px_,T[pi].v,fin,dt);holo(t);radar(q,t);if(pb.classList.contains('has')&&!pb.classList.contains('off'))tline();wave(ms)}
 // ---------- boot: tap-to-engage gate (a tap is required for voice and sound) ----------
 const first=daily?0:P.stars.findIndex(s=>!s);prep(first<0?0:first);setStage('gate');
 if(daily){document.title='Daily Challenge · Orbital Command';$('#gk').textContent='DAILY CHALLENGE · '+dayLabel(lv().key);$('#gl').textContent=lv().n.toUpperCase();$('#gx').textContent='Par '+lv().par+' · '+lv().mods+' · streak '+D.streak+' · attempts today '+D.attempts}else $('#gl').textContent='LEVEL '+(LI+1)+' · '+lv().n.toUpperCase();
